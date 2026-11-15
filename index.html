@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campings de Monterrey</title>
+<meta name="description" content="Mapa interactivo de campings en Monterrey, Santiago, La Huasteca, Potrero Chico y la sierra: precios, reglas, capacidad, fotos y reseñas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Layout: mapa a pantalla completa; barra superior flotante; ficha lateral (escritorio) u hoja inferior (celular) */
+:root{
+  --pine:#1f4d3a; --pine-2:#2f6b52; --ember:#e0662b; --sand:#f6f3ec; --ink:#17211c; --mute:#5d6b63;
+  --card:#ffffff; --line:#e3e1d8; --chip:#eef1ec; --shadow:0 18px 50px -18px rgba(14,32,24,.45);
+  --f-display:"Bricolage Grotesque",system-ui,sans-serif; --f-body:"Figtree",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --pine:#7fc8a3; --pine-2:#5aa883; --ember:#ff8a4c; --sand:#0f1512; --ink:#eaf0ec; --mute:#9aaba2;
+  --card:#18201c; --line:#2a352f; --chip:#222c27; --shadow:0 18px 50px -18px rgba(0,0,0,.8); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --pine:#7fc8a3; --pine-2:#5aa883; --ember:#ff8a4c; --sand:#0f1512; --ink:#eaf0ec; --mute:#9aaba2;
+  --card:#18201c; --line:#2a352f; --chip:#222c27; --shadow:0 18px 50px -18px rgba(0,0,0,.8); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--sand);color:var(--ink);font:15px/1.5 var(--f-body);overflow:hidden}
+#map{position:fixed;inset:0;background:#2b3a32}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+
+/* barra superior */
+.top{position:fixed;z-index:750;top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));
+  display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+.brand{pointer-events:auto;background:var(--card);border-radius:18px;padding:12px 16px;box-shadow:var(--shadow);max-width:360px}
+.brand h1{font:800 22px/1 var(--f-display);letter-spacing:-.02em;margin:0;display:flex;align-items:center;gap:8px;text-wrap:balance}
+.brand h1 svg{flex:none}
+.brand p{margin:6px 0 0;color:var(--mute);font-size:13px}
+.brand .stats{display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--mute)}
+.brand .stats b{display:block;font:700 18px/1.1 var(--f-display);color:var(--ink);font-variant-numeric:tabular-nums}
+.tools{pointer-events:auto;margin-left:auto;display:flex;gap:8px}
+.pill{background:var(--card);border:0;border-radius:999px;padding:9px 14px;box-shadow:var(--shadow);font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px}
+.pill[aria-pressed="true"]{background:var(--pine);color:var(--card)}
+
+/* chips de zona */
+.zones{position:fixed;z-index:500;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:4px 2px}
+.zones::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;background:var(--card);border-radius:999px;padding:8px 14px;font-weight:600;font-size:13px;box-shadow:0 6px 20px -8px rgba(0,0,0,.4)}
+.chip span{color:var(--mute);font-weight:500;margin-left:4px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--ember);color:#fff}
+.chip[aria-pressed="true"] span{color:#ffe7da}
+
+/* marcadores */
+.pin{width:44px;height:52px;position:relative;transition:transform .2s}
+.pin .bubble{position:absolute;left:50%;top:0;transform:translateX(-50%);min-width:44px;height:30px;padding:0 9px;border-radius:15px;background:var(--card);color:var(--ink);
+  font:700 12px/30px var(--f-mono);white-space:nowrap;box-shadow:0 6px 16px -4px rgba(0,0,0,.5);display:flex;gap:5px;align-items:center;justify-content:center;border:2px solid var(--card)}
+.pin .bubble i{width:16px;height:16px;flex:none;border-radius:50%;background:var(--pine);display:grid;place-items:center}
+.pin .bubble i svg{width:10px;height:10px}
+.pin .tail{position:absolute;left:50%;top:27px;width:12px;height:12px;background:var(--card);transform:translateX(-50%) rotate(45deg);border-radius:2px}
+.pin:hover,.pin.on{transform:translateY(-4px) scale(1.08);z-index:999}
+.pin.on .bubble,.pin.on .tail{background:var(--ember);color:#fff;border-color:var(--ember)}
+.pin.on .bubble i{background:#fff}
+.pin.on .bubble i svg path{fill:var(--ember)}
+.pin.dim{opacity:.25;pointer-events:none}
+.leaflet-tooltip.lbl{background:transparent;border:0;box-shadow:none;color:#fff;font:700 11px var(--f-body);text-transform:uppercase;letter-spacing:.12em;text-shadow:0 1px 4px #000,0 0 12px #000}
+.leaflet-tooltip.lbl:before{display:none}
+.leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.7)!important}
+.leaflet-control-zoom{border:0!important;box-shadow:var(--shadow)!important;border-radius:14px!important;overflow:hidden}
+.leaflet-control-zoom a{background:var(--card)!important;color:var(--ink)!important;border-color:var(--line)!important}
+.leaflet-top.leaflet-left{top:auto;bottom:70px}
+
+/* ficha */
+.sheet{position:fixed;z-index:800;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--card);box-shadow:-20px 0 60px -20px rgba(0,0,0,.5);
+  transform:translateX(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px)}
+.sheet.open{transform:none}
+.sheet .scroll{overflow-y:auto;flex:1;overscroll-behavior:contain}
+.close{position:absolute;z-index:3;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));width:40px;height:40px;border-radius:50%;border:0;
+  background:rgba(10,20,15,.6);color:#fff;backdrop-filter:blur(8px);display:grid;place-items:center}
+.gallery{position:relative;aspect-ratio:4/3;background:#203028;overflow:hidden;max-width:100%}
+.gallery .track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gallery .track::-webkit-scrollbar{display:none}
+.gallery figure{margin:0;flex:0 0 100%;height:100%;scroll-snap-align:start;position:relative}
+.gallery img{width:100%;height:100%;object-fit:cover;display:block}
+.gallery figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 16px 10px;font-size:11px;color:#e8efe9;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+.gallery figcaption a{color:inherit}
+.gallery .nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.85);color:#17211c;display:grid;place-items:center}
+.gallery .prev{left:10px}.gallery .next{right:10px}
+.gallery .dots{position:absolute;top:16px;left:16px;display:flex;gap:5px}
+.gallery .dots b{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5)}
+.gallery .dots b.on{background:#fff}
+.nophoto{height:100%;display:grid;place-items:center;color:#cfe0d6;text-align:center;padding:24px;font-size:13px}
+.body{padding:20px 22px 40px;display:grid;gap:22px}
+.kicker{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--pine-2)}
+.body h2{font:800 30px/1.05 var(--f-display);letter-spacing:-.025em;margin:4px 0 6px;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;color:var(--mute);font-size:13px;align-items:center}
+.stars{color:var(--ember);font-weight:700}
+.price{background:var(--pine);color:var(--card);border-radius:18px;padding:16px 18px;display:grid;gap:4px}
+.price small{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.1em;opacity:.8}
+.price strong{font:800 26px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.price p{margin:0;font-size:13px;opacity:.92}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fact{background:var(--chip);border-radius:14px;padding:12px 14px;min-width:0}
+.fact small{display:block;font:500 10px var(--f-mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mute)}
+.fact div{font-weight:600;font-size:14px;margin-top:2px}
+.sec h3{font:700 16px var(--f-display);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.rules{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rules li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.rules li:before{content:"";flex:none;width:8px;height:8px;margin-top:7px;border-radius:2px;background:var(--ember);transform:rotate(45deg)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{background:var(--chip);border-radius:999px;padding:5px 11px;font-size:13px}
+.review{border-left:3px solid var(--line);padding:2px 0 2px 14px;font-size:14px}
+.review + .review{margin-top:12px}
+.review footer{color:var(--mute);font-size:12px;margin-top:3px}
+.note{background:color-mix(in srgb,var(--ember) 12%,transparent);border-radius:14px;padding:12px 14px;font-size:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:10px 16px;font-weight:600;font-size:14px;text-decoration:none;background:var(--ember);color:#fff;border:0}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.src{font-size:12px;color:var(--mute);word-break:break-word}
+.src a{color:var(--pine-2)}
+.conf{display:inline-block;font:500 10px var(--f-mono);text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:var(--chip)}
+.conf.alta{color:var(--pine-2)}.conf.media{color:#b8860b}.conf.baja{color:var(--ember)}
+
+/* lista / tabla */
+.list{position:fixed;z-index:720;inset:0;background:var(--sand);overflow:auto;transform:translateY(100%);transition:transform .4s cubic-bezier(.2,.8,.2,1);
+  padding:calc(80px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 90px max(16px,env(safe-area-inset-left,0px))}
+.list.open{transform:none}
+.list h2{font:800 26px var(--f-display);margin:0 0 4px}
+.list > p{color:var(--mute);margin:0 0 16px;font-size:13px}
+.tablewrap{overflow-x:auto;background:var(--card);border-radius:18px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mute);cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--card)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--chip)}
+
+@media (max-width:720px){
+  .brand{max-width:none;flex:1;padding:10px 14px}
+  .brand h1{font-size:19px}
+  .brand p,.brand .stats{display:none}
+  .tools .pill .t{display:none}
+  .sheet{top:auto;width:100%;height:88%;border-radius:22px 22px 0 0;transform:translateY(105%);padding-top:0}
+  .sheet.open{transform:none}
+  .gallery{aspect-ratio:16/10}
+  .leaflet-top.leaflet-left{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Mapa de campings"></div>
+
+<header class="top">
+  <div class="brand">
+    <h1><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Zm0 6 5 9h-3l-2-4-2 4H7l5-9Z" fill="var(--ember)"/></svg>Campings de Monterrey</h1>
+    <p>Dónde acampar en la sierra: precios, reglas, capacidad y reseñas. Toca un pin para ver la ficha.</p>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="tools">
+    <button class="pill" id="btnLayer" aria-pressed="false" title="Cambiar a mapa"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-6 2v16l6-2 6 2 6-2V3l-6 2-6-2Zm0 2.2 6 2v13.6l-6-2V5.2Z" fill="currentColor"/></svg><span class="t">Mapa</span></button>
+    <button class="pill" id="btnList" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h18v2H3v-2Z" fill="currentColor"/></svg><span class="t">Comparar</span></button>
+  </div>
+</header>
+
+<nav class="zones" id="zones" aria-label="Filtrar por zona"></nav>
+
+<aside class="sheet" id="sheet" aria-hidden="true" aria-labelledby="sheetTitle">
+  <button class="close" id="close" aria-label="Cerrar y volver al mapa"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6 6.4 5Z" fill="currentColor"/></svg></button>
+  <div class="scroll" id="sheetBody"></div>
+</aside>
+
+<section class="list" id="list" aria-hidden="true">
+  <h2>Comparar campings</h2>
+  <p>Toca un encabezado para ordenar. Toca una fila para verla en el mapa. Los precios son por persona por noche cuando aplica; confirma siempre antes de ir.</p>
+  <div class="tablewrap"><table id="table"></table></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="data.js"></script>
+<script>
+const D = window.CAMPINGS, $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tent = '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Zm0 6 5 9h-3l-2-4-2 4H7l5-9Z" fill="#fff"/></svg>';
+const money = n => n == null ? "?" : "$" + n.toLocaleString("es-MX");
+
+const map = L.map("map", {zoomControl:true, attributionControl:true, zoomSnap:.25}).setView([25.6, -100.3], 10);
+const sat = L.layerGroup([
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, attribution:"Imágenes © Esri, Maxar, Earthstar"}),
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, opacity:.9})
+]).addTo(map);
+const street = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {maxZoom:19, subdomains:"abcd", attribution:"© OpenStreetMap, © CARTO"});
+$("#btnLayer").onclick = e => {
+  const s = map.hasLayer(sat); s ? (map.removeLayer(sat), street.addTo(map)) : (map.removeLayer(street), sat.addTo(map));
+  e.currentTarget.setAttribute("aria-pressed", s); e.currentTarget.querySelector(".t").textContent = s ? "Satélite" : "Mapa";
+};
+
+// Estadísticas
+const precios = D.map(c => c.precio_min_mxn).filter(n => n > 0).sort((a,b) => a-b);
+const med = precios.length ? precios[Math.floor(precios.length/2)] : null;
+$("#stats").innerHTML = `<div><b>${D.length}</b>lugares</div><div><b>${money(precios[0])}–${money(precios.at(-1))}</b>por persona</div><div><b>${money(med)}</b>precio típico</div>`;
+
+// Marcadores
+const markers = {};
+D.forEach(c => {
+  const label = c.precio_min_mxn ? money(c.precio_min_mxn) : "$ ?";
+  const icon = L.divIcon({className:"", iconSize:[44,52], iconAnchor:[22,40],
+    html:`<div class="pin" data-id="${c.id}"><div class="tail"></div><div class="bubble"><i>${tent}</i>${label}</div></div>`});
+  markers[c.id] = L.marker([c.lat, c.lng], {icon, title:c.nombre, keyboard:true, riseOnHover:true}).addTo(map).on("click", () => open(c.id));
+});
+const all = L.latLngBounds(D.map(c => [c.lat, c.lng]));
+const pad = () => innerWidth < 720 ? {paddingTopLeft:[24,90], paddingBottomRight:[24,70]} : {paddingTopLeft:[60,190], paddingBottomRight:[60,80]};
+map.fitBounds(all, pad());
+
+// Zonas
+const zonas = [...D.reduce((m,c) => m.set(c.zona, (m.get(c.zona)||0)+1), new Map())].sort((a,b) => b[1]-a[1]);
+let zonaSel = null;
+$("#zones").innerHTML = `<button class="chip" aria-pressed="true" data-z="">Todas<span>${D.length}</span></button>` +
+  zonas.map(([z,n]) => `<button class="chip" aria-pressed="false" data-z="${esc(z)}">${esc(z)}<span>${n}</span></button>`).join("");
+$("#zones").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  zonaSel = b.dataset.z || null;
+  document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  const sel = D.filter(c => !zonaSel || c.zona === zonaSel);
+  document.querySelectorAll(".pin").forEach(p => p.classList.toggle("dim", !!zonaSel && !sel.some(c => c.id === p.dataset.id)));
+  map.flyToBounds(L.latLngBounds(sel.map(c => [c.lat, c.lng])), {...pad(), maxZoom:13, duration:1.2});
+};
+
+// Ficha
+const sheet = $("#sheet");
+function open(id){
+  const c = D.find(x => x.id === id); if (!c) return;
+  closeList();
+  document.querySelectorAll(".pin").forEach(p => p.classList.toggle("on", p.dataset.id === id));
+  const off = innerWidth < 720 ? [0, innerHeight*0.3] : [-230, 0];
+  const z = Math.max(map.getZoom(), 14);
+  const target = map.unproject(map.project([c.lat, c.lng], z).add(off.map(n => -n)), z);
+  map.flyTo(target, z, {duration:1.4});
+  const f = c.fotos || [];
+  const stars = c.rating ? `<span class="stars">★ ${c.rating.toFixed(1)}</span>` : "";
+  sheet.querySelector("#sheetBody").innerHTML = `
+    <div class="gallery">${f.length ? `
+      <div class="track" id="track">${f.map(p => `<figure><img src="${esc(p.src)}" alt="${esc(p.titulo)}" loading="lazy">
+        <figcaption>${p.zona ? "Foto de la zona · " : ""}<a href="${esc(p.pag)}" target="_blank" rel="noopener">${esc(p.autor || "Wikimedia Commons")}</a>${p.lic ? " · " + esc(p.lic) : ""}</figcaption></figure>`).join("")}</div>
+      ${f.length > 1 ? `<button class="nav prev" aria-label="Foto anterior">‹</button><button class="nav next" aria-label="Foto siguiente">›</button>
+      <div class="dots">${f.map((_,i) => `<b class="${i?"":"on"}"></b>`).join("")}</div>` : ""}`
+      : `<div class="nophoto">Sin fotos libres de este lugar.<br>Mira sus fotos en Google Maps con el botón de abajo.</div>`}
+    </div>
+    <div class="body">
+      <div>
+        <div class="kicker">${esc(c.tipo)} · ${esc(c.zona)}</div>
+        <h2 id="sheetTitle">${esc(c.nombre)}</h2>
+        <div class="meta">${stars}<span>${esc(c.municipio)}, N.L.</span><span class="conf ${esc(c.confianza)}">Info ${esc(c.confianza)}</span>${c.coords_aprox ? `<span class="conf">Ubicación aproximada</span>` : ""}</div>
+      </div>
+      <div class="price"><small>Precio</small><strong>${c.precio_min_mxn ? money(c.precio_min_mxn) + " <span style='font-size:15px;font-weight:600'>desde, por persona</span>" : "Consultar"}</strong><p>${esc(c.precio)}</p></div>
+      <div class="facts">
+        <div class="fact" style="grid-column:1/-1"><small>Capacidad</small><div>${esc(c.capacidad || "No publicada")}</div></div>
+        ${c.contacto ? `<div class="fact" style="grid-column:1/-1"><small>Contacto</small><div style="user-select:all">${esc(c.contacto)}</div></div>` : ""}
+      </div>
+      ${c.reglas?.length ? `<div class="sec"><h3>Reglas</h3><ul class="rules">${c.reglas.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
+      ${c.servicios?.length ? `<div class="sec"><h3>Servicios</h3><div class="tags">${c.servicios.map(s => `<span>${esc(s)}</span>`).join("")}</div></div>` : ""}
+      ${c.resenas?.length ? `<div class="sec"><h3>Lo que dice la gente</h3>${c.resenas.map(r => `<blockquote class="review" style="margin:0">${esc(r.texto)}<footer>${esc(r.fuente || "")}${r.estrellas ? " · ★ " + r.estrellas : ""}</footer></blockquote>`).join("")}</div>` : ""}
+      ${c.nota ? `<div class="note"><b>Toma en cuenta:</b> ${esc(c.nota)}</div>` : ""}
+      <div class="actions">
+        <a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}">Cómo llegar</a>
+        <a class="btn ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.nombre + " " + c.municipio + " Nuevo León")}">Fotos y reseñas en Google</a>
+      </div>
+      ${c.fuente_urls?.length ? `<div class="src"><b>Fuentes:</b> ${c.fuente_urls.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/,"").slice(0,48))}</a>`).join(" · ")}</div>` : ""}
+    </div>`;
+  const tr = $("#track");
+  if (tr){
+    const dots = sheet.querySelectorAll(".dots b"), go = d => tr.scrollBy({left:d*tr.clientWidth, behavior:"smooth"});
+    sheet.querySelector(".prev")?.addEventListener("click", () => go(-1));
+    sheet.querySelector(".next")?.addEventListener("click", () => go(1));
+    tr.addEventListener("scroll", () => { const i = Math.round(tr.scrollLeft/tr.clientWidth); dots.forEach((d,j) => d.classList.toggle("on", i===j)); });
+  }
+  sheet.querySelector(".scroll").scrollTop = 0;
+  sheet.classList.add("open"); sheet.setAttribute("aria-hidden","false");
+  history.replaceState(null, "", "#" + id);
+  setTimeout(() => $("#close").focus({preventScroll:true}), 300);
+}
+function closeSheet(){
+  if (!sheet.classList.contains("open")) return;
+  sheet.classList.remove("open"); sheet.setAttribute("aria-hidden","true");
+  document.querySelectorAll(".pin.on").forEach(p => p.classList.remove("on"));
+  history.replaceState(null, "", location.pathname);
+  const sel = D.filter(c => !zonaSel || c.zona === zonaSel);
+  map.flyToBounds(L.latLngBounds(sel.map(c => [c.lat, c.lng])), {...pad(), duration:1.3});
+}
+$("#close").onclick = closeSheet;
+addEventListener("keydown", e => { if (e.key === "Escape") { closeSheet(); closeList(); } });
+
+// Tabla comparativa
+const cols = [["nombre","Lugar"],["zona","Zona"],["precio_min_mxn","Desde"],["capacidad","Capacidad"],["rating","★"],["mascotas","Mascotas"],["fogata","Fogatas"]];
+const rx = (c, re) => (c.reglas||[]).find(r => re.test(r)) || "—";
+D.forEach(c => { c.mascotas = rx(c, /mascota|perro/i); c.fogata = rx(c, /fogat|fuego|leña/i); });
+let sortK = "precio_min_mxn", sortDir = 1;
+function drawTable(){
+  const rows = [...D].sort((a,b) => { const x=a[sortK], y=b[sortK]; if (x==null) return 1; if (y==null) return -1; return (typeof x==="number" ? x-y : String(x).localeCompare(y)) * sortDir; });
+  $("#table").innerHTML = `<thead><tr>${cols.map(([k,t]) => `<th data-k="${k}">${t}${k===sortK ? (sortDir>0?" ↑":" ↓") : ""}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(c => `<tr data-id="${c.id}"><td><b>${esc(c.nombre)}</b><br><small style="color:var(--mute)">${esc(c.tipo)}</small></td><td>${esc(c.zona)}</td><td class="num">${c.precio_min_mxn ? money(c.precio_min_mxn) : "Consultar"}</td><td>${esc(c.capacidad||"—")}</td><td class="num">${c.rating ?? "—"}</td><td>${esc(c.mascotas)}</td><td>${esc(c.fogata)}</td></tr>`).join("")}</tbody>`;
+}
+$("#table").onclick = e => {
+  const th = e.target.closest("th"); if (th){ sortDir = th.dataset.k === sortK ? -sortDir : 1; sortK = th.dataset.k; return drawTable(); }
+  const tr = e.target.closest("tr[data-id]"); if (tr) open(tr.dataset.id);
+};
+const list = $("#list");
+function closeList(){ list.classList.remove("open"); list.setAttribute("aria-hidden","true"); $("#btnList").setAttribute("aria-pressed","false"); }
+$("#btnList").onclick = () => { if (list.classList.contains("open")) return closeList(); closeSheet(); drawTable(); list.classList.add("open"); list.setAttribute("aria-hidden","false"); $("#btnList").setAttribute("aria-pressed","true"); };
+
+// Etiquetas de zonas en el mapa
+[["Monterrey",25.686,-100.316],["Santiago",25.425,-100.152],["La Huasteca",25.635,-100.47],["Potrero Chico",25.95,-100.48],["Laguna de Sánchez",25.345,-100.28],["Chipinque",25.615,-100.355]]
+  .forEach(([n,a,b]) => L.tooltip({permanent:true, direction:"center", className:"lbl", interactive:false}).setLatLng([a,b]).setContent(n).addTo(map));
+
+if (location.hash) setTimeout(() => open(location.hash.slice(1)), 600);
+</script>
+</body>
+</html>
