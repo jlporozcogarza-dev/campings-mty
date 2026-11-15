@@ -203,7 +203,7 @@ $("#stats").innerHTML = `<div><b>${D.length}</b>lugares</div><div><b>${money(pre
 // Marcadores
 const markers = {};
 D.forEach(c => {
-  const label = c.precio_min_mxn ? money(c.precio_min_mxn) : "$ ?";
+  const label = c.precio_min_mxn ? money(c.precio_min_mxn) : c.rating ? "★ " + c.rating : "Consultar";
   const icon = L.divIcon({className:"", iconSize:[44,52], iconAnchor:[22,40],
     html:`<div class="pin" data-id="${c.id}"><div class="tail"></div><div class="bubble"><i>${tent}</i>${label}</div></div>`});
   markers[c.id] = L.marker([c.lat, c.lng], {icon, title:c.nombre, keyboard:true, riseOnHover:true}).addTo(map).on("click", () => open(c.id));

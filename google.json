@@ -1,0 +1,192 @@
+[
+ {
+  "id": "camping-el-cerrillo",
+  "nombre": "Camping El Cerrillo",
+  "municipio": "Santiago",
+  "zona": "El Cercado",
+  "lat": 25.4654582,
+  "lng": -100.2323881,
+  "coords_aprox": false,
+  "tipo": "camping privado",
+  "precio": "Consultar por WhatsApp o teléfono",
+  "precio_min_mxn": null,
+  "capacidad": null,
+  "reglas": [],
+  "servicios": [],
+  "resenas": [
+   {
+    "texto": "Lugar tranquilo y bonito para pasar el día y la noche acampando.",
+    "fuente": "Google",
+    "estrellas": null
+   }
+  ],
+  "rating": 4.9,
+  "num_resenas": 147,
+  "contacto": "81 2632 1344 · Camino del Sendero, Rancho El Cerrillo",
+  "fuente_urls": [
+   "https://www.google.com/maps/search/?api=1&query=Camping+El+Cerrillo+Santiago+Nuevo+Leon"
+  ],
+  "confianza": "media",
+  "nota": ""
+ },
+ {
+  "id": "el-arado-camping",
+  "nombre": "El Arado Camping",
+  "municipio": "Santiago",
+  "zona": "El Cercado",
+  "lat": 25.3757234,
+  "lng": -100.1511529,
+  "coords_aprox": false,
+  "tipo": "camping privado",
+  "precio": "Consultar por WhatsApp o teléfono",
+  "precio_min_mxn": null,
+  "capacidad": null,
+  "reglas": [],
+  "servicios": [],
+  "resenas": [],
+  "rating": 4.9,
+  "num_resenas": 22,
+  "contacto": "81 1398 8095 · Pérez 120, Jesús Rocha, Cieneguilla",
+  "fuente_urls": [
+   "https://www.google.com/maps/search/?api=1&query=El+Arado+Camping+Santiago+Nuevo+Leon"
+  ],
+  "confianza": "media",
+  "nota": ""
+ },
+ {
+  "id": "la-charca-camping",
+  "nombre": "La Charca Cabañas y Camping Zone",
+  "municipio": "Santiago",
+  "zona": "San Juan Bautista",
+  "lat": 25.4018006,
+  "lng": -100.3069253,
+  "coords_aprox": false,
+  "tipo": "camping y cabañas",
+  "precio": "Consultar por WhatsApp o teléfono",
+  "precio_min_mxn": null,
+  "capacidad": "Cabañas de 2-3 a 14-20 personas; área de camping sin capacidad indicada",
+  "reglas": [
+   "Tiene reglamento en PDF en su sitio (no se revisó)"
+  ],
+  "servicios": [
+   "Área de camping",
+   "Juegos infantiles",
+   "Cancha de voleibol/fútbol",
+   "Lago o alberca",
+   "Kiosco",
+   "Senderos",
+   "Espacio para eventos"
+  ],
+  "resenas": [],
+  "rating": 4.9,
+  "num_resenas": 42,
+  "contacto": "81 2934 2404 · Calle al Cañón del Álamo, San Juan Bautista · Tel. +52 812 934 2404; reservaciones@lacharcabanas.com; web lacharcabanas.com",
+  "fuente_urls": [
+   "https://www.google.com/maps/search/?api=1&query=La+Charca+Cabañas+y+Camping+Zone+Santiago+Nuevo+Leon",
+   "https://www.lacharcabanas.com/",
+   "https://www.lacharcabanas.com/reservaciones/"
+  ],
+  "confianza": "media",
+  "nota": "Cañón del Álamo, San Juan Bautista, Santiago 67340. Queda a unos 800 m del antiguo Rodeo Ciénega de González y a 1 km de la carretera a Laguna de Sánchez, por camino de piedra. Unos 30 minutos arriba de Cola de Caballo."
+ },
+ {
+  "id": "vive-libre-boquillas",
+  "nombre": "Vive Libre",
+  "municipio": "Santiago",
+  "zona": "San José de las Boquillas",
+  "lat": 25.348277,
+  "lng": -100.406128,
+  "coords_aprox": false,
+  "tipo": "camping y cabañas",
+  "precio": "Consultar por WhatsApp o teléfono",
+  "precio_min_mxn": null,
+  "capacidad": null,
+  "reglas": [],
+  "servicios": [],
+  "resenas": [
+   {
+    "texto": "Destacan el clima, las vistas, la tranquilidad y las instalaciones.",
+    "fuente": "Google",
+    "estrellas": null
+   }
+  ],
+  "rating": 4.5,
+  "num_resenas": 55,
+  "contacto": "81 1790 8270 · San José de las Boquillas",
+  "fuente_urls": [
+   "https://www.google.com/maps/search/?api=1&query=Vive+Libre+Santiago+Nuevo+Leon"
+  ],
+  "confianza": "media",
+  "nota": ""
+ },
+ {
+  "id": "camping-rio-escondido",
+  "nombre": "Camping Río Escondido",
+  "municipio": "Santiago",
+  "zona": "Laguna de Sánchez",
+  "lat": 25.3507489,
+  "lng": -100.2963863,
+  "coords_aprox": false,
+  "tipo": "camping y glamping",
+  "precio": "No visible sin fechas en Airbnb",
+  "precio_min_mxn": null,
+  "capacidad": "8 glampings de hasta 4 personas cada uno, más espacio para tiendas propias",
+  "reglas": [
+   "La ubicación exacta se manda al confirmar la reserva",
+   "Al llegar se deja una identificación en casa del encargado y se devuelve a la salida",
+   "Mascotas permitidas"
+  ],
+  "servicios": [
+   "Colchones en los glampings",
+   "Asador grupal o individual con minibar",
+   "Mesas de picnic",
+   "Baño",
+   "Agua",
+   "Iluminación",
+   "WiFi",
+   "Estacionamiento gratis",
+   "Acceso al río/lago"
+  ],
+  "resenas": [
+   {
+    "texto": "Calificación promedio 4.85 con 13 reseñas; la comunicación del anfitrión es lo mejor valorado (5.0)",
+    "fuente": "Airbnb",
+    "estrellas": 4.85
+   }
+  ],
+  "rating": 4.6,
+  "num_resenas": 14,
+  "contacto": "81 1865 5650 · Carretera a Laguna de Sánchez km 38.5, San Isidro",
+  "fuente_urls": [
+   "https://www.google.com/maps/search/?api=1&query=Camping+Río+Escondido+Santiago+Nuevo+Leon",
+   "https://sq.airbnb.com/rooms/1232048766070506541",
+   "https://www.airbnb.com/nuevo-leon-mexico/stays/campsites"
+  ],
+  "confianza": "media",
+  "nota": "El anuncio dice que puedes llevar tu propio equipo porque rentan el espacio. Las coordenadas son una estimación genérica de la sierra de Santiago."
+ },
+ {
+  "id": "glamping-del-rio",
+  "nombre": "Glamping del Río",
+  "municipio": "Santiago",
+  "zona": "Presa La Boca",
+  "lat": 25.4581562,
+  "lng": -100.0858694,
+  "coords_aprox": false,
+  "tipo": "glamping / camping",
+  "precio": "Consultar por WhatsApp o teléfono",
+  "precio_min_mxn": null,
+  "capacidad": null,
+  "reglas": [],
+  "servicios": [],
+  "resenas": [],
+  "rating": 4.2,
+  "num_resenas": 10,
+  "contacto": "81 2404 6450 · Congregación La Boca",
+  "fuente_urls": [
+   "https://www.google.com/maps/search/?api=1&query=Glamping+del+Río+Santiago+Nuevo+Leon"
+  ],
+  "confianza": "media",
+  "nota": ""
+ }
+]
